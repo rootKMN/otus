@@ -1,0 +1,113 @@
+root@mkubuntsrv:/etc/vagr# ls
+sata1.vdi  sata2.vdi  sata3.vdi  sata4.vdi  sata5.vdi  Vagrantfile
+root@mkubuntsrv:/etc/vagr# vagrant ssh
+[vagrant@mkcentos ~]$ sudo -s
+[root@mkcentos vagrant]# lshw -short | grep disk
+/0/100/1.1/0.0.0    /dev/sda   disk        42GB VBOX HARDDISK
+/0/100/d/0          /dev/sdb   disk        262MB VBOX HARDDISK
+/0/100/d/1          /dev/sdc   disk        262MB VBOX HARDDISK
+/0/100/d/2          /dev/sdd   disk        262MB VBOX HARDDISK
+/0/100/d/3          /dev/sde   disk        262MB VBOX HARDDISK
+/0/100/d/0.0.0      /dev/sdf   disk        262MB VBOX HARDDISK
+[root@mkcentos vagrant]# lshw -short | grep disk
+/0/100/1.1/0.0.0    /dev/sda   disk        42GB VBOX HARDDISK
+/0/100/d/0          /dev/sdb   disk        262MB VBOX HARDDISK
+/0/100/d/1          /dev/sdc   disk        262MB VBOX HARDDISK
+/0/100/d/2          /dev/sdd   disk        262MB VBOX HARDDISK
+/0/100/d/3          /dev/sde   disk        262MB VBOX HARDDISK
+/0/100/d/0.0.0      /dev/sdf   disk        262MB VBOX HARDDISK
+[root@mkcentos vagrant]# fdisk -l
+
+Disk /dev/sda: 42.9 GB, 42949672960 bytes, 83886080 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk label type: dos
+Disk identifier: 0x0009ef1a
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *        2048    83886079    41942016   83  Linux
+
+Disk /dev/sdb: 262 MB, 262144000 bytes, 512000 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/sdc: 262 MB, 262144000 bytes, 512000 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/sdd: 262 MB, 262144000 bytes, 512000 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/sde: 262 MB, 262144000 bytes, 512000 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/sdf: 262 MB, 262144000 bytes, 512000 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+[root@mkcentos vagrant]# mdadm --zero-superblock --force /dev/sd{d,c,d,e,f}
+mdadm: Unrecognised md component device - /dev/sdd
+mdadm: Unrecognised md component device - /dev/sdc
+mdadm: Unrecognised md component device - /dev/sdd
+mdadm: Unrecognised md component device - /dev/sde
+mdadm: Unrecognised md component device - /dev/sdf
+[root@mkcentos vagrant]# mdadm  --create --verbose /dev/md111
+mdadm: no raid-devices specified.
+[root@mkcentos vagrant]# mdadm  --create --verbose /dev/md111 -l 6 -n 5 /dev/sd{b,c,d,e,f}
+mdadm: layout defaults to left-symmetric
+mdadm: layout defaults to left-symmetric
+mdadm: chunk size defaults to 512K
+mdadm: size set to 253952K
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md111 started.
+[root@mkcentos vagrant]# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] 
+md111 : active raid6 sdf[4] sde[3] sdd[2] sdc[1] sdb[0]
+      761856 blocks super 1.2 level 6, 512k chunk, algorithm 2 [5/5] [UUUUU]
+      
+unused devices: <none>
+[root@mkcentos vagrant]# mdadm -D /dev/md111 
+/dev/md111:
+           Version : 1.2
+     Creation Time : Wed Jul 12 12:10:25 2023
+        Raid Level : raid6
+        Array Size : 761856 (744.00 MiB 780.14 MB)
+     Used Dev Size : 253952 (248.00 MiB 260.05 MB)
+      Raid Devices : 5
+     Total Devices : 5
+       Persistence : Superblock is persistent
+
+       Update Time : Wed Jul 12 12:10:34 2023
+             State : clean 
+    Active Devices : 5
+   Working Devices : 5
+    Failed Devices : 0
+     Spare Devices : 0
+
+            Layout : left-symmetric
+        Chunk Size : 512K
+
+Consistency Policy : resync
+
+              Name : mkcentos:111  (local to host mkcentos)
+              UUID : 148a9b26:4bf63e24:616d1585:8da88b98
+            Events : 17
+
+    Number   Major   Minor   RaidDevice State
+       0       8       16        0      active sync   /dev/sdb
+       1       8       32        1      active sync   /dev/sdc
+       2       8       48        2      active sync   /dev/sdd
+       3       8       64        3      active sync   /dev/sde
+       4       8       80        4      active sync   /dev/sdf
